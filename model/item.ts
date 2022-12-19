@@ -101,8 +101,6 @@ async function edit(
     Pick<BackbarItem, "brand" | "lowStockThreshold" | "quantity" | "name">
   > & { id: string }
 ) {
-  console.log("edit", item);
-
   await updateDoc(doc(db, "items", item.id), {
     name: item.name,
     brand: item.brand,

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Backbar Manager",
+    "name": "backbar",
     "slug": "backbar",
     "scheme": "backbar",
     "version": "1.0.0",
@@ -19,6 +19,9 @@
       "**/*"
     ],
     "ios": {
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "supportsTablet": false,
       "buildNumber": "1",
       "bundleIdentifier": "com.jonstuebe.backbar"
