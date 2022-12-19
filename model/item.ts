@@ -8,7 +8,14 @@ import {
 import { z } from "zod";
 import { auth, db } from "../firebase";
 
-export const brands = ["Moroccan Oil Rhapsody", "Test"] as const;
+export const brands = [
+  "Rhapsody",
+  "Shades EQ",
+  "Faction8",
+  "High Speed Toners",
+  "Blonde Voyage Powder Lightener",
+  "Blonde Voyage Clay Lightener",
+] as const;
 export type BackbarBrand = typeof brands[number];
 
 export type BackbarItemHistoryChangeType =
