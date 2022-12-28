@@ -158,6 +158,7 @@ export default function Home() {
             disabled={lowStockValue === 0}
             onPress={() => {
               setFilter("low_stock");
+              setSearchQuery(undefined);
             }}
             style={{
               flex: 1 / 2,
@@ -173,6 +174,7 @@ export default function Home() {
             disabled={outOfStockValue === 0}
             onPress={() => {
               setFilter("out_of_stock");
+              setSearchQuery(undefined);
             }}
             style={{
               flex: 1 / 2,
@@ -284,7 +286,10 @@ export default function Home() {
                         .hsl()
                         .string(),
                     }}
-                    onPress={() => setFilter(undefined)}
+                    onPress={() => {
+                      setFilter(undefined);
+                      setSearchQuery(undefined);
+                    }}
                   >
                     <Ionicons
                       name="close-circle"
