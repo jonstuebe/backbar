@@ -119,7 +119,6 @@ export default function Item({ style, ...item }: ItemProps) {
         >
           <View>
             <Text
-              allowFontScaling={false}
               style={[
                 iOSUIKit.title3EmphasizedWhite,
                 {
@@ -144,7 +143,6 @@ export default function Item({ style, ...item }: ItemProps) {
               }}
             >
               <Text
-                allowFontScaling={false}
                 style={[
                   iOSUIKit.caption2,
                   {

@@ -18,6 +18,6 @@ export const useAccountsQuery = () => {
       });
     }
 
-    return undefined;
+    return [];
   });
 };

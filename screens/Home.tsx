@@ -2,12 +2,13 @@ import { useTheme } from "@react-navigation/native";
 import Color from "color";
 import { MotiView } from "moti";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, ScrollView } from "react-native";
 import Confetti from "react-native-confetti";
-import { RefreshControl, ScrollView } from "react-native-gesture-handler";
+import { RefreshControl, TextInput } from "react-native-gesture-handler";
 import { Portal } from "react-native-portalize";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { iOSColors, iOSUIKit } from "react-native-typography";
+import Fuse from "fuse.js";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import Colors from "../Colors";
@@ -42,6 +43,8 @@ export default function Home() {
   const itemsQuery = useItemsQuery();
   const { isRefreshing, onRefresh } = useIsRefreshingQuery(itemsQuery);
 
+  const [searchQuery, setSearchQuery] = useState<string | undefined>(undefined);
+
   const [filter, setFilter] = useState<
     "low_stock" | "out_of_stock" | undefined
   >(undefined);
@@ -55,19 +58,31 @@ export default function Home() {
     [itemsQuery.data]
   );
   const data = useMemo(() => {
-    if (filter && itemsQuery.data) {
+    let data = itemsQuery.data ?? [];
+
+    if (searchQuery) {
+      const fuse = new Fuse(data, {
+        threshold: 0.8,
+        keys: ["name"],
+      });
+
+      const r = fuse.search(searchQuery);
+      data = r.map((r) => r.item);
+    }
+
+    if (filter) {
       switch (filter) {
         case "low_stock":
-          return itemsQuery.data.filter(isLowStock);
+          return data.filter(isLowStock);
         case "out_of_stock":
-          return itemsQuery.data.filter(isOutOfStock);
+          return data.filter(isOutOfStock);
         default:
-          return itemsQuery.data;
+          return data;
       }
     }
 
-    return itemsQuery.data;
-  }, [filter, itemsQuery.data]);
+    return data;
+  }, [filter, itemsQuery.data, searchQuery]);
 
   useEffect(() => {
     emitter.on("confetti", startConfetti);
@@ -193,6 +208,48 @@ export default function Home() {
             </View>
           ) : (
             <>
+              <View
+                style={{
+                  flexDirection: "row",
+                  width: "100%",
+                  paddingVertical: 16,
+                  paddingHorizontal: 16,
+                  overflow: "hidden",
+                  height: 54,
+
+                  borderTopRightRadius: 12,
+                  borderTopLeftRadius: 12,
+
+                  backgroundColor: Color(colors.card)
+                    .darken(0.2)
+                    .hsl()
+                    .string(),
+                }}
+              >
+                <TextInput
+                  placeholder="Search"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  style={{
+                    flex: 1,
+                    paddingRight: 8,
+                    color: Colors.darkGray,
+                  }}
+                />
+                {searchQuery ? (
+                  <Pressable
+                    hitSlop={6}
+                    onPress={() => setSearchQuery(undefined)}
+                  >
+                    <Ionicons
+                      name="close-circle"
+                      size={20}
+                      color={Colors.darkGray}
+                      style={{ marginRight: 4 }}
+                    />
+                  </Pressable>
+                ) : null}
+              </View>
               {filter ? (
                 <MotiView
                   from={{
@@ -210,6 +267,9 @@ export default function Home() {
                 >
                   <Pressable
                     style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+
                       width: "100%",
                       paddingVertical: 16,
                       paddingHorizontal: 16,
@@ -226,6 +286,12 @@ export default function Home() {
                     }}
                     onPress={() => setFilter(undefined)}
                   >
+                    <Ionicons
+                      name="close-circle"
+                      size={20}
+                      color={Colors.darkGray}
+                      style={{ marginRight: 4 }}
+                    />
                     <Text style={[iOSUIKit.bodyEmphasizedWhite]}>
                       Clear Filter
                     </Text>
@@ -233,18 +299,18 @@ export default function Home() {
                 </MotiView>
               ) : undefined}
               <ScrollView
+                style={{
+                  height: "100%",
+                  flex: 1,
+                  borderRadius: 12,
+                  paddingVertical: 12,
+                }}
                 refreshControl={
                   <RefreshControl
                     onRefresh={onRefresh}
                     refreshing={isRefreshing}
                   />
                 }
-                contentContainerStyle={{
-                  flex: 1,
-                  borderRadius: 12,
-                  paddingVertical: 12,
-                  overflow: "hidden",
-                }}
               >
                 {data?.map((item, index) => (
                   <Item

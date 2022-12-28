@@ -3,9 +3,11 @@ import path from "node:path";
 import { readFile, readdir } from "node:fs/promises";
 import { config } from "dotenv";
 import { initializeApp, cert } from "firebase-admin/app";
+import { Timestamp } from "firebase-admin/firestore";
 import { getFirestore } from "firebase-admin/firestore";
 import { createSpinner } from "nanospinner";
 import inquirer from "inquirer";
+import { isObject } from "lodash";
 import { PromisePool } from "@supercharge/promise-pool";
 
 program.version("0.1.0").option("-e, --env <name>", "environment").parse();
@@ -28,12 +30,52 @@ const serviceAccount = {
   client_id: process.env.FIREBASE_ADMIN_CLIENT_ID,
   auth_uri: process.env.FIREBASE_ADMIN_AUTH_URI,
   token_uri: process.env.FIREBASE_ADMIN_TOKEN_URI,
-  auth_provider_x509_cert_url: process.env.FIREBASE_ADMIN_AUTH_PROVIDER_X509_CERT_URL,
+  auth_provider_x509_cert_url:
+    process.env.FIREBASE_ADMIN_AUTH_PROVIDER_X509_CERT_URL,
   client_x509_cert_url: process.env.FIREBASE_ADMIN_CLIENT_X509_CERT_URL,
 };
 
+function transformRecord(record: Record<string, any>) {
+  if (record) {
+    const keys = Object.keys(record);
+
+    return keys.reduce((acc, key) => {
+      if (
+        record[key] &&
+        record[key]["_seconds"] &&
+        record[key]["_nanoseconds"]
+      ) {
+        record[key] = new Timestamp(
+          record[key]["_seconds"],
+          record[key]["_nanoseconds"]
+        );
+      }
+
+      if (Array.isArray(record[key])) {
+        const arr = (record[key] as any[]).map((arrRecord) => {
+          if (isObject(arrRecord)) {
+            return transformRecord(arrRecord);
+          }
+          return arrRecord;
+        }) as any;
+
+        return {
+          ...acc,
+          [key]: arr,
+        };
+      }
+
+      return {
+        ...acc,
+        [key]: record[key],
+      };
+    }, {});
+  }
+
+  return record;
+}
+
 (async () => {
-  const dateStr = new Date().toISOString().substring(0, 10);
   const backupsPath = path.join(process.cwd(), "backups", env);
   const spinner = createSpinner("Removing old records");
 
@@ -72,9 +114,9 @@ const serviceAccount = {
       },
     ]);
 
-    const collectionsBackup = (await readdir(path.join(backupsPath, dateChosen))).filter((f) =>
-      f.endsWith(".json")
-    );
+    const collectionsBackup = (
+      await readdir(path.join(backupsPath, dateChosen))
+    ).filter((f) => f.endsWith(".json"));
 
     const restoreSpinner = createSpinner("Restoring records...");
 
@@ -82,13 +124,18 @@ const serviceAccount = {
     for (const collectionBackupName of collectionsBackup) {
       const name = collectionBackupName.replace(".json", "");
       const collection = JSON.parse(
-        await readFile(path.join(backupsPath, dateChosen, collectionBackupName), "utf8")
+        await readFile(
+          path.join(backupsPath, dateChosen, collectionBackupName),
+          "utf8"
+        )
       );
 
       await PromisePool.withConcurrency(10)
         .for(Object.keys(collection))
         .process(async (key) => {
-          await db.doc(`${name}/${key}`).create(collection[key]);
+          await db
+            .doc(`${name}/${key}`)
+            .create(transformRecord(collection[key]));
         });
     }
     restoreSpinner.success({
