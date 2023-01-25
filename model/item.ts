@@ -86,8 +86,7 @@ async function decreaseStock(item: BackbarItem) {
 }
 
 async function increaseStock(item: BackbarItem) {
-  const quantityInStock =
-    item.quantityInStock === 0 ? 0 : item.quantityInStock + 1;
+  const quantityInStock = item.quantityInStock + 1;
 
   await updateDoc(doc(db, "items", item.id), {
     quantityInStock,

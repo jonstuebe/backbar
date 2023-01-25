@@ -164,12 +164,19 @@ export default function Item({ style, ...item }: ItemProps) {
             }}
           >
             <Pressable
-              style={{ marginRight: 4 }}
               hitSlop={4}
               onPress={async () => {
-                await ItemModel.decreaseStock(item);
-                await client.invalidateQueries(getItemsQueryKey());
+                try {
+                  await ItemModel.decreaseStock(item);
+                  await client.invalidateQueries(getItemsQueryKey());
+                } catch (e) {
+                  console.log("remove", e);
+                }
               }}
+              style={({ pressed }) => ({
+                marginRight: 4,
+                opacity: pressed ? 0.9 : 1,
+              })}
             >
               <Ionicons
                 name="remove-circle"
@@ -190,9 +197,16 @@ export default function Item({ style, ...item }: ItemProps) {
             <Pressable
               hitSlop={4}
               onPress={async () => {
-                await ItemModel.increaseStock(item);
-                await client.invalidateQueries(getItemsQueryKey());
+                try {
+                  await ItemModel.increaseStock(item);
+                  await client.invalidateQueries(getItemsQueryKey());
+                } catch (e) {
+                  console.log("add", e);
+                }
               }}
+              style={({ pressed }) => ({
+                opacity: pressed ? 0.9 : 1,
+              })}
             >
               <Ionicons name="add-circle" size={24} color={Colors.darkGray} />
             </Pressable>
