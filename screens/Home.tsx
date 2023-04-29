@@ -1,8 +1,14 @@
 import { useTheme } from "@react-navigation/native";
 import Color from "color";
 import { MotiView } from "moti";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, Text, View, ScrollView } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Pressable,
+  Text,
+  View,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import Confetti from "react-native-confetti";
 import { RefreshControl, TextInput } from "react-native-gesture-handler";
 import { Portal } from "react-native-portalize";
@@ -23,7 +29,6 @@ import { Card } from "../components/Card";
 import Item from "../components/Item";
 import { useIsRefreshingQuery } from "../hooks/useIsRefreshingQuery";
 import { BackbarItem } from "../model/item";
-import { Easing } from "react-native-reanimated";
 
 function isLowStock(item: BackbarItem): boolean {
   return isOutOfStock(item)
@@ -62,7 +67,7 @@ export default function Home() {
 
     if (searchQuery) {
       const fuse = new Fuse(data, {
-        threshold: 0.8,
+        threshold: 0.6,
         keys: ["name"],
       });
 
@@ -197,16 +202,15 @@ export default function Home() {
             position: "relative",
           }}
         >
-          {data?.length === 0 ? (
+          {itemsQuery.isLoading ? (
             <View
               style={{
                 flex: 1,
                 alignItems: "center",
-                paddingVertical: 12,
                 justifyContent: "center",
               }}
             >
-              <Text style={[iOSUIKit.title3White]}>No Items</Text>
+              <ActivityIndicator size="large" />
             </View>
           ) : (
             <>
@@ -217,7 +221,8 @@ export default function Home() {
                   paddingVertical: 16,
                   paddingHorizontal: 16,
                   overflow: "hidden",
-                  height: 54,
+                  alignItems: "center",
+                  height: 58,
 
                   borderTopRightRadius: 12,
                   borderTopLeftRadius: 12,
@@ -245,7 +250,7 @@ export default function Home() {
                   >
                     <Ionicons
                       name="close-circle"
-                      size={20}
+                      size={24}
                       color={Colors.darkGray}
                       style={{ marginRight: 4 }}
                     />
@@ -317,15 +322,31 @@ export default function Home() {
                   />
                 }
               >
-                {data?.map((item, index) => (
-                  <Item
-                    key={item.id}
-                    {...item}
+                {data.length === 0 ? (
+                  <View
                     style={{
-                      marginBottom: data?.length === index + 1 ? undefined : 12,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flex: 1,
+                      paddingVertical: 16,
                     }}
-                  />
-                ))}
+                  >
+                    <Text style={[iOSUIKit.title3EmphasizedWhite]}>
+                      No Items Found
+                    </Text>
+                  </View>
+                ) : (
+                  data?.map((item, index) => (
+                    <Item
+                      key={item.id}
+                      {...item}
+                      style={{
+                        marginBottom:
+                          data?.length === index + 1 ? undefined : 12,
+                      }}
+                    />
+                  ))
+                )}
               </ScrollView>
             </>
           )}

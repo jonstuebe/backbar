@@ -4,8 +4,15 @@ import { useTheme } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import Color from "color";
 import { parseISO } from "date-fns";
-import React, { useMemo } from "react";
-import { Pressable, StyleProp, Text, View, ViewStyle } from "react-native";
+import React, { useEffect, useMemo } from "react";
+import {
+  Alert,
+  Pressable,
+  StyleProp,
+  Text,
+  View,
+  ViewStyle,
+} from "react-native";
 import SwipeableItem from "react-native-swipeable-item";
 import { iOSColors, iOSUIKit } from "react-native-typography";
 import Colors from "../Colors";
@@ -119,13 +126,16 @@ export default function Item({ style, ...item }: ItemProps) {
         >
           <View>
             <Text
+              numberOfLines={1}
               style={[
                 iOSUIKit.title3EmphasizedWhite,
                 {
                   letterSpacing: -0.45,
-                  fontSize: 18,
-                  marginBottom: 4,
+                  fontSize: 16,
+                  lineHeight: 18,
+                  marginBottom: 8,
                   color: Color("#ffffff").hsl().darken(0.1).string(),
+                  maxWidth: 216,
                 },
               ]}
             >
@@ -146,8 +156,8 @@ export default function Item({ style, ...item }: ItemProps) {
                 style={[
                   iOSUIKit.caption2,
                   {
-                    fontSize: 14,
-                    lineHeight: 16,
+                    fontSize: 12,
+                    lineHeight: 12,
                     color: Color("#ffffff").hsl().darken(0.3).string(),
                     letterSpacing: -0.2,
                   },
@@ -164,7 +174,7 @@ export default function Item({ style, ...item }: ItemProps) {
             }}
           >
             <Pressable
-              hitSlop={4}
+              hitSlop={6}
               onPress={async () => {
                 try {
                   await ItemModel.decreaseStock(item);
@@ -195,7 +205,7 @@ export default function Item({ style, ...item }: ItemProps) {
               {item.quantityInStock}
             </Text>
             <Pressable
-              hitSlop={4}
+              hitSlop={6}
               onPress={async () => {
                 try {
                   await ItemModel.increaseStock(item);

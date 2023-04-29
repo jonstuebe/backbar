@@ -23,7 +23,7 @@
         "usesNonExemptEncryption": false
       },
       "supportsTablet": false,
-      "buildNumber": "3",
+      "buildNumber": "4",
       "bundleIdentifier": "com.jonstuebe.backbar"
     },
     "android": {

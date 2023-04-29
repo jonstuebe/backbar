@@ -1,13 +1,14 @@
-import { Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Button, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { iOSUIKit } from "react-native-typography";
+import { iOSColors, iOSUIKit } from "react-native-typography";
 import { Cell, Section, TableView } from "react-native-tableview-simple";
 import { ScrollView, TextInput } from "react-native-gesture-handler";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTheme } from "@react-navigation/native";
 import { signInWithEmailAndPassword } from "@firebase/auth";
 import { z } from "zod";
 import * as SecureStore from "expo-secure-store";
+import RNRestart from "react-native-restart";
 
 import Colors from "../Colors";
 import Color from "color";
@@ -92,83 +93,116 @@ export default function Login() {
           }}
         >
           <Section hideSurroundingSeparators roundedCorners>
-            <Cell
-              title="Email"
-              cellAccessoryView={
-                <View style={{ flex: 1 }}>
-                  <TextInput
-                    placeholder="hello@company.com"
-                    autoComplete="email"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    autoFocus
-                    keyboardAppearance="dark"
-                    value={email}
-                    onChangeText={setEmail}
-                    editable={!isSubmitting}
-                    style={{
-                      flex: 1,
-                      color: "#fff",
-                      textAlign: "right",
-                      opacity: isSubmitting ? 0.1 : undefined,
-                    }}
-                  />
-                </View>
-              }
-            />
-            <Cell
-              title="Password"
-              cellAccessoryView={
-                <View style={{ flex: 1 }}>
-                  <TextInput
-                    placeholder="Your password"
-                    autoComplete="password"
-                    keyboardAppearance="dark"
-                    secureTextEntry
-                    value={password}
-                    onChangeText={setPassword}
-                    editable={!isSubmitting}
-                    onSubmitEditing={() => onSubmit({ email, password })}
-                    maxLength={20}
-                    style={{
-                      flex: 1,
-                      color: "#fff",
-                      textAlign: "right",
-                      opacity: isSubmitting ? 0.1 : undefined,
-                    }}
-                  />
-                </View>
-              }
-            />
+            {accountsQuery.isLoading ? (
+              <Cell
+                cellAccessoryView={
+                  <View style={{ width: "100%" }}>
+                    <ActivityIndicator size="small" />
+                  </View>
+                }
+              />
+            ) : accountsQuery.data && accountsQuery.data.length > 0 ? (
+              <>
+                {accountsQuery.data.map((account, idx) => {
+                  return (
+                    <Cell
+                      key={idx}
+                      title={account.email}
+                      accessory="DisclosureIndicator"
+                      onPress={() => {
+                        onSubmit(account);
+                      }}
+                    />
+                  );
+                })}
+                <Cell
+                  title="Logout All"
+                  titleTextColor={iOSColors.red}
+                  onPress={() => {
+                    SecureStore.deleteItemAsync("accounts").then(() => {
+                      RNRestart.restart();
+                    });
+                  }}
+                />
+              </>
+            ) : (
+              <>
+                <Cell
+                  title="Email"
+                  cellAccessoryView={
+                    <TextInput
+                      placeholder="hello@company.com"
+                      autoComplete="email"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoFocus
+                      keyboardAppearance="dark"
+                      value={email}
+                      onChangeText={setEmail}
+                      editable={!isSubmitting}
+                      style={{
+                        color: "#fff",
+                        textAlign: "right",
+                        opacity: isSubmitting ? 0.1 : undefined,
+                      }}
+                    />
+                  }
+                />
+                <Cell
+                  title="Password"
+                  cellAccessoryView={
+                    <TextInput
+                      placeholder="Your password"
+                      autoComplete="password"
+                      keyboardAppearance="dark"
+                      secureTextEntry
+                      value={password}
+                      onChangeText={setPassword}
+                      editable={!isSubmitting}
+                      onSubmitEditing={() => onSubmit({ email, password })}
+                      maxLength={20}
+                      style={{
+                        color: "#fff",
+                        textAlign: "right",
+                        opacity: isSubmitting ? 0.1 : undefined,
+                      }}
+                    />
+                  }
+                />
+              </>
+            )}
           </Section>
         </TableView>
-        <Pressable
-          disabled={!isValid || isSubmitting}
-          style={{
-            width: "100%",
-            alignItems: "center",
-            paddingVertical: 10,
-            borderRadius: 10,
-            marginBottom: 8,
+        {accountsQuery.isLoading ||
+        (accountsQuery.data && accountsQuery.data.length > 0) ? null : (
+          <Pressable
+            disabled={!isValid || isSubmitting}
+            style={{
+              width: "100%",
+              alignItems: "center",
+              paddingVertical: 10,
+              borderRadius: 10,
+              marginBottom: 8,
 
-            backgroundColor: colors.card,
-            opacity: isValid ? 1 : 0.8,
-          }}
-          onPress={() => onSubmit({ email, password })}
-        >
-          <Text
-            style={[
-              iOSUIKit.body,
-              {
-                color: isValid
-                  ? Colors.blue
-                  : Color(colors.text).hsl().alpha(0.2).string(),
-              },
-            ]}
+              backgroundColor: colors.card,
+              opacity: isValid ? 1 : 0.8,
+            }}
+            onPress={() => onSubmit({ email, password })}
           >
-            {isSubmitting ? "Logging in..." : "Login"}
-          </Text>
-        </Pressable>
+            <Text
+              style={[
+                iOSUIKit.body,
+                {
+                  color: isValid
+                    ? Colors.blue
+                    : Color(colors.text).hsl().alpha(0.2).string(),
+                },
+              ]}
+            >
+              {isSubmitting ? "Logging in..." : "Login"}
+            </Text>
+          </Pressable>
+        )}
       </ScrollView>
       <View>
         <Pressable

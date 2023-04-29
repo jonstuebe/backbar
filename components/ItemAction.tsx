@@ -21,7 +21,7 @@ export default function ItemAction({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: `flex-${placement}`,
-        height: 90,
+        height: 88,
         borderRadius: 24,
         overflow: "hidden",
         backgroundColor: color,
