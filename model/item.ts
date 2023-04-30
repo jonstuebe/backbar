@@ -16,7 +16,7 @@ export const brands = [
   "Blonde Voyage Powder Lightener",
   "Blonde Voyage Clay Lightener",
 ] as const;
-export type BackbarBrand = typeof brands[number];
+export type BackbarBrand = (typeof brands)[number];
 
 export type BackbarItemHistoryChangeType =
   | "increasedQuantity"
@@ -68,6 +68,8 @@ async function create(
 }
 
 async function decreaseStock(item: BackbarItem) {
+  if (item.quantityInStock === 0) return;
+
   const quantityInStock =
     item.quantityInStock === 0 ? 0 : item.quantityInStock - 1;
 
