@@ -9,12 +9,12 @@ import { z } from "zod";
 import { auth, db } from "../firebase";
 
 export const brands = [
-  "Rhapsody",
-  "Shades EQ",
+  "Blonde Voyage Clay Lightener",
+  "Blonde Voyage Powder Lightener",
   "Faction8",
   "High Speed Toners",
-  "Blonde Voyage Powder Lightener",
-  "Blonde Voyage Clay Lightener",
+  "Rhapsody",
+  "Shades EQ",
 ] as const;
 export type BackbarBrand = (typeof brands)[number];
 

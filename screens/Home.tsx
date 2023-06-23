@@ -1,21 +1,16 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTheme } from "@react-navigation/native";
 import Color from "color";
+import Fuse from "fuse.js";
 import { MotiView } from "moti";
 import { useEffect, useMemo, useState } from "react";
-import {
-  Pressable,
-  Text,
-  View,
-  ScrollView,
-  ActivityIndicator,
-} from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Confetti from "react-native-confetti";
 import { RefreshControl, TextInput } from "react-native-gesture-handler";
+import { FlashList } from "@shopify/flash-list";
 import { Portal } from "react-native-portalize";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { iOSColors, iOSUIKit } from "react-native-typography";
-import Fuse from "fuse.js";
-import Ionicons from "@expo/vector-icons/Ionicons";
 
 import Colors from "../Colors";
 
@@ -24,11 +19,12 @@ import { useNavigation } from "../hooks/useHomeNavigation";
 
 import { useItemsQuery } from "../queries/useItemsQuery";
 
-import { emitter } from "../emitter";
+import { MenuView } from "@react-native-menu/menu";
 import { Card } from "../components/Card";
 import Item from "../components/Item";
+import { emitter } from "../emitter";
 import { useIsRefreshingQuery } from "../hooks/useIsRefreshingQuery";
-import { BackbarItem } from "../model/item";
+import { BackbarBrand, BackbarItem, brands } from "../model/item";
 
 function isLowStock(item: BackbarItem): boolean {
   return isOutOfStock(item)
@@ -49,6 +45,9 @@ export default function Home() {
   const { isRefreshing, onRefresh } = useIsRefreshingQuery(itemsQuery);
 
   const [searchQuery, setSearchQuery] = useState<string | undefined>(undefined);
+  const [brandsSelected, setBrandsSelected] = useState<
+    BackbarBrand[] | undefined
+  >(undefined);
 
   const [filter, setFilter] = useState<
     "low_stock" | "out_of_stock" | undefined
@@ -65,9 +64,13 @@ export default function Home() {
   const data = useMemo(() => {
     let data = itemsQuery.data ?? [];
 
+    if (brandsSelected) {
+      data = data.filter((item) => brandsSelected.includes(item.brand));
+    }
+
     if (searchQuery) {
       const fuse = new Fuse(data, {
-        threshold: 0.6,
+        threshold: 0.49,
         keys: ["name"],
       });
 
@@ -87,7 +90,7 @@ export default function Home() {
     }
 
     return data;
-  }, [filter, itemsQuery.data, searchQuery]);
+  }, [brandsSelected, filter, itemsQuery.data, searchQuery]);
 
   useEffect(() => {
     emitter.on("confetti", startConfetti);
@@ -122,7 +125,7 @@ export default function Home() {
               },
             ]}
           >
-            Dashboard
+            Backbar
           </Text>
           <Pressable
             onPress={() => navigate("Settings")}
@@ -138,7 +141,7 @@ export default function Home() {
             }}
           >
             <Ionicons
-              name="ios-cog"
+              name="ellipsis-vertical"
               size={20}
               style={{
                 marginLeft: 2,
@@ -161,8 +164,13 @@ export default function Home() {
             label="Low Stock"
             value={lowStockValue ?? 0}
             disabled={lowStockValue === 0}
+            active={filter === "low_stock"}
             onPress={() => {
-              setFilter("low_stock");
+              if (filter === "low_stock") {
+                setFilter(undefined);
+              } else {
+                setFilter("low_stock");
+              }
               setSearchQuery(undefined);
             }}
             style={{
@@ -177,8 +185,13 @@ export default function Home() {
             label="Out of Stock"
             value={outOfStockValue ?? 0}
             disabled={outOfStockValue === 0}
+            active={filter === "out_of_stock"}
             onPress={() => {
-              setFilter("out_of_stock");
+              if (filter === "out_of_stock") {
+                setFilter(undefined);
+              } else {
+                setFilter("out_of_stock");
+              }
               setSearchQuery(undefined);
             }}
             style={{
@@ -187,6 +200,65 @@ export default function Home() {
             }}
           />
         </View>
+        <MenuView
+          onPressAction={({ nativeEvent: { event: id } }) => {
+            if (id === "all") {
+              setBrandsSelected(undefined);
+            } else {
+              setBrandsSelected((prev) => {
+                if (prev) {
+                  if (prev.includes(id as BackbarBrand)) {
+                    if (prev.filter((b) => b !== id).length === 0) {
+                      return undefined;
+                    } else {
+                      return prev.filter((b) => b !== id);
+                    }
+                  }
+                  return [...prev, id as BackbarBrand];
+                }
+                return [id as BackbarBrand];
+              });
+            }
+          }}
+          actions={[
+            {
+              id: "all",
+              title: "View All",
+              state: brandsSelected === undefined ? "on" : "off",
+            },
+            ...brands.map((brand) => ({
+              id: brand,
+              title: brand,
+              state: (brandsSelected?.includes(brand) ? "on" : "off") as
+                | "on"
+                | "off",
+            })),
+          ]}
+        >
+          <Pressable
+            style={{
+              backgroundColor: colors.card,
+              paddingHorizontal: 12,
+              paddingVertical: 12,
+              borderRadius: 12,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Text
+              style={[iOSUIKit.footnoteEmphasized, { color: Colors.darkGray }]}
+            >
+              Brand
+            </Text>
+            <Ionicons
+              name="chevron-down-outline"
+              size={20}
+              color={Colors.darkGray}
+            />
+          </Pressable>
+        </MenuView>
         <MotiView
           from={{ opacity: 0, transform: [{ translateY: 8, scale: 0.7 }] }}
           animate={{ opacity: 1, transform: [{ translateY: 0, scale: 1 }] }}
@@ -198,7 +270,6 @@ export default function Home() {
             flex: 1,
             backgroundColor: colors.card,
             borderRadius: 12,
-
             position: "relative",
           }}
         >
@@ -222,24 +293,24 @@ export default function Home() {
                   paddingHorizontal: 16,
                   overflow: "hidden",
                   alignItems: "center",
-                  height: 58,
-
-                  borderTopRightRadius: 12,
-                  borderTopLeftRadius: 12,
-
-                  backgroundColor: Color(colors.card)
-                    .darken(0.2)
-                    .hsl()
-                    .string(),
                 }}
               >
+                <Ionicons name="search" size={20} color={Colors.darkGray} />
                 <TextInput
                   placeholder="Search"
+                  autoComplete="off"
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                  importantForAutofill="no"
+                  placeholderTextColor={Color(Colors.darkGray)
+                    .alpha(0.8)
+                    .rgb()
+                    .toString()}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   style={{
                     flex: 1,
-                    paddingRight: 8,
+                    paddingHorizontal: 8,
                     color: Colors.darkGray,
                   }}
                 />
@@ -249,105 +320,59 @@ export default function Home() {
                     onPress={() => setSearchQuery(undefined)}
                   >
                     <Ionicons
-                      name="close-circle"
-                      size={24}
+                      name="close"
+                      size={20}
                       color={Colors.darkGray}
                       style={{ marginRight: 4 }}
                     />
                   </Pressable>
                 ) : null}
               </View>
-              {filter ? (
-                <MotiView
-                  from={{
-                    opacity: 0,
-                    height: 0,
-                  }}
-                  animate={{
-                    opacity: 1,
-                    height: 54,
-                  }}
-                  transition={{
-                    type: "timing",
-                    duration: 350,
-                  }}
-                >
-                  <Pressable
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-
-                      width: "100%",
-                      paddingVertical: 16,
-                      paddingHorizontal: 16,
-                      overflow: "hidden",
-                      height: 54,
-
-                      borderTopRightRadius: 12,
-                      borderTopLeftRadius: 12,
-
-                      backgroundColor: Color(colors.card)
-                        .darken(0.2)
-                        .hsl()
-                        .string(),
-                    }}
-                    onPress={() => {
-                      setFilter(undefined);
-                      setSearchQuery(undefined);
-                    }}
-                  >
-                    <Ionicons
-                      name="close-circle"
-                      size={20}
-                      color={Colors.darkGray}
-                      style={{ marginRight: 4 }}
-                    />
-                    <Text style={[iOSUIKit.bodyEmphasizedWhite]}>
-                      Clear Filter
-                    </Text>
-                  </Pressable>
-                </MotiView>
-              ) : undefined}
-              <ScrollView
+              <View
                 style={{
-                  height: "100%",
                   flex: 1,
                   borderRadius: 12,
-                  paddingVertical: 12,
+                  paddingBottom: 12,
                 }}
-                refreshControl={
-                  <RefreshControl
-                    onRefresh={onRefresh}
-                    refreshing={isRefreshing}
-                  />
-                }
               >
-                {data.length === 0 ? (
-                  <View
-                    style={{
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flex: 1,
-                      paddingVertical: 16,
-                    }}
-                  >
-                    <Text style={[iOSUIKit.title3EmphasizedWhite]}>
-                      No Items Found
-                    </Text>
-                  </View>
-                ) : (
-                  data?.map((item, index) => (
-                    <Item
-                      key={item.id}
-                      {...item}
-                      style={{
-                        marginBottom:
-                          data?.length === index + 1 ? undefined : 12,
-                      }}
+                <FlashList
+                  estimatedItemSize={88}
+                  keyboardShouldPersistTaps="handled"
+                  refreshControl={
+                    <RefreshControl
+                      onRefresh={onRefresh}
+                      refreshing={isRefreshing}
                     />
-                  ))
-                )}
-              </ScrollView>
+                  }
+                  data={data}
+                  ListEmptyComponent={() => (
+                    <View
+                      style={{
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flex: 1,
+                        paddingVertical: 16,
+                      }}
+                    >
+                      <Text style={[iOSUIKit.title3EmphasizedWhite]}>
+                        No Items Found
+                      </Text>
+                    </View>
+                  )}
+                  renderItem={({ item, index }) => {
+                    return (
+                      <Item
+                        key={item.id}
+                        {...item}
+                        style={{
+                          marginBottom:
+                            data?.length === index + 1 ? undefined : 12,
+                        }}
+                      />
+                    );
+                  }}
+                />
+              </View>
             </>
           )}
         </MotiView>

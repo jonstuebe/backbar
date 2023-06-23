@@ -16,6 +16,7 @@ export interface CardProps {
   label: string;
   value: string | number;
   disabled?: boolean;
+  active?: boolean;
   onPress: VoidFunction;
   style?: StyleProp<ViewStyle>;
 }
@@ -24,6 +25,7 @@ export function Card({
   icon,
   label,
   disabled,
+  active,
   value,
   onPress,
   style,
@@ -36,9 +38,10 @@ export function Card({
       disabled={disabled}
       style={({ pressed }) => [
         {
-          backgroundColor: pressed
-            ? Color(Colors.darkGray).alpha(0.35).string()
-            : colors.card,
+          backgroundColor:
+            pressed || active
+              ? Color(Colors.darkGray).alpha(0.35).string()
+              : colors.card,
           paddingHorizontal: 12,
           paddingVertical: 12,
           borderRadius: 12,

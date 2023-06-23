@@ -3,7 +3,7 @@
     "name": "backbar",
     "slug": "backbar",
     "scheme": "backbar",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -23,7 +23,7 @@
         "usesNonExemptEncryption": false
       },
       "supportsTablet": false,
-      "buildNumber": "4",
+      "buildNumber": "1",
       "bundleIdentifier": "com.jonstuebe.backbar"
     },
     "android": {

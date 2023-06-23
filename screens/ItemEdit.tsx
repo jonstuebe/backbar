@@ -15,6 +15,7 @@ import { useRoute } from "../hooks/useRoute";
 import { BackbarBrand, brands, editSchema, Item } from "../model/item";
 import { useCachedItem } from "../queries/useCachedItem";
 import { getItemsQueryKey } from "../queries/useItemsQuery";
+import { ScrollView } from "react-native-gesture-handler";
 
 type FormFieldNames = "name" | "brand" | "quantity" | "lowStockThreshold";
 
@@ -92,7 +93,7 @@ export default function ItemEdit() {
   }, [item, params, goBack, onSubmit]);
 
   return (
-    <View>
+    <ScrollView keyboardDismissMode="interactive">
       <TableView appearance="dark">
         <Section hideSurroundingSeparators>
           <Cell
@@ -164,7 +165,7 @@ export default function ItemEdit() {
           />
         </Section>
       </TableView>
-    </View>
+    </ScrollView>
   );
 }
 

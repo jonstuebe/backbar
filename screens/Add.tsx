@@ -97,7 +97,7 @@ export default function Add() {
 
   return (
     <>
-      <ScrollView>
+      <ScrollView keyboardDismissMode="interactive">
         <TableView appearance="dark">
           <Section hideSurroundingSeparators>
             <Cell
