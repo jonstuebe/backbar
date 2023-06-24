@@ -1,5 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { query, collection, where, getDocs } from "@firebase/firestore";
+import {
+  query,
+  collection,
+  where,
+  getDocs,
+  orderBy,
+} from "@firebase/firestore";
 
 import { auth, db } from "../firebase";
 import {
@@ -16,8 +22,8 @@ export function useItemsQuery() {
       const user = auth.currentUser;
       const q = query(
         collection(db, "items"),
-        where("uid", "==", user?.uid)
-        // , orderBy("name", "asc")
+        where("uid", "==", user?.uid),
+        orderBy("name", "asc")
       );
       const snapshots = await getDocs(q);
 
