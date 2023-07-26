@@ -15,6 +15,7 @@ export const brands = [
   "High Speed Toners",
   "Rhapsody",
   "Shades EQ",
+  "Color.Me",
 ] as const;
 export type BackbarBrand = (typeof brands)[number];
 
